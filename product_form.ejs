@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title><%= producto ? "Editar producto" : "Crear producto" %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <h1><%= producto ? "Editar producto" : "Crear nuevo producto" %></h1>
+
+  <% if (error) { %>
+    <p style="color: red;"><%= error %></p>
+  <% } %>
+
+  <form action="<%= producto ? '/products/update/' + producto.id : '/products/create' %>" method="POST">
+    <label>Nombre:
+      <input type="text" name="name" value="<%= producto ? producto.name : '' %>" required>
+    </label><br>
+
+    <label>Descripción:
+      <textarea name="description" required><%= producto ? producto.description : '' %></textarea>
+    </label><br>
+
+    <label>Precio:
+      <input type="number" name="price" step="0.01" value="<%= producto ? producto.price : '' %>" required>
+    </label><br>
+
+    <button type="submit"><%= producto ? "Actualizar" : "Crear" %></button>
+  </form>
+
+  <p>
+    <a href="<%= producto ? '/products/' + producto.id : '/products' %>">Cancelar</a>
+  </p>
+</body>
+</html>
