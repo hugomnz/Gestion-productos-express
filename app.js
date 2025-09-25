@@ -1,58 +1,55 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
-const { Sequelize } = require('sequelize');
+
+const { sequelize } = require('./models');
 
 const app = express();
 
-// Configurar motor de vistas
+/* -------------------- Configuración de vistas y estáticos -------------------- */
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-
-// Middleware para parsear formularios
 app.use(express.urlencoded({ extended: true }));
-
-// Servir archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Configurar sesiones
+/* ------------------------------ Sesiones ------------------------------------ */
+const SESSION_SECRET = process.env.SESSION_SECRET || 'cambia-esto-en-produccion-123';
+app.set('trust proxy', 1); // recomendable si hay proxy/CDN (Render/Railway)
 app.use(session({
-  secret: 'secretoseguro123',
+  secret: SESSION_SECRET,
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    // secure: true en HTTPS detrás de proxy 
+    sameSite: 'lax'
+  }
 }));
 
-// Sequelize (base de datos SQLite)
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: './database.sqlite'
-});
+/* ---------------------------- Verificación DB ------------------------------- */
+sequelize.authenticate()
+  .then(() => console.log('✅ Conexión a SQLite OK'))
+  .catch(err => console.error('❌ Error conectando a SQLite:', err));
 
-// Hacer sequelize accesible desde req
-app.use((req, res, next) => {
-  req.sequelize = sequelize;
-  next();
-});
-
-// Redirigir al login como punto de entrada
+/* ------------------------------- Rutas -------------------------------------- */
+// Entrada: redirige a login
 app.get('/', (req, res) => {
   res.redirect('/login');
 });
 
-// Cargar rutas (las añadiremos después)
+// Rutas de autenticación y productos
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 
 app.use(authRoutes);
 app.use('/products', productRoutes);
 
-// Página de error 404
+// 404
 app.use((req, res) => {
   res.status(404).render('not_found');
 });
 
-// Iniciar el servidor
-const PORT = 3000;
+/* ----------------------------- Servidor ------------------------------------- */
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor funcionando en http://localhost:${PORT}`);
+  console.log(`✅ Servidor funcionando en http://localhost:${PORT}`);
 });
