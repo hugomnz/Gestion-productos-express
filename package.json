@@ -1,21 +1,17 @@
-{
-  "name": "ejercicio_2_pec2_rsw",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "crypto-js": "^4.2.0",
-    "ejs": "^3.1.10",
-    "express": "^5.1.0",
-    "express-session": "^1.18.1",
-    "sequelize": "^6.37.7",
-    "sqlite3": "^5.1.7"
-  }
-}
+const { Sequelize } = require('sequelize');
+const path = require('path');
+
+const storagePath = process.env.SQLITE_PATH || path.join(__dirname, '..', 'database.sqlite');
+
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: storagePath
+});
+
+const User = require('./user')(sequelize);
+const Product = require('./product')(sequelize);
+
+// Crea tablas si no existen
+sequelize.sync();
+
+module.exports = { sequelize, User, Product };
